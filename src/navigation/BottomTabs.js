@@ -12,6 +12,7 @@ import ListingDetailScreen from '../screens/ListingDetailScreen'
 const Tab = createBottomTabNavigator()
 const FeedStack = createStackNavigator()
 const FollowingStack = createStackNavigator()
+const MapStack = createStackNavigator()
 
 function FeedStackScreen() {
   return (
@@ -28,6 +29,15 @@ function FollowingStackScreen() {
       <FollowingStack.Screen name="FollowingMain" component={FollowingScreen} />
       <FollowingStack.Screen name="ListingDetail" component={ListingDetailScreen} />
     </FollowingStack.Navigator>
+  )
+}
+
+function MapStackScreen() {
+  return (
+    <MapStack.Navigator screenOptions={{ headerShown: false }}>
+      <MapStack.Screen name="MapMain" component={MapScreen} />
+      <MapStack.Screen name="ListingDetail" component={ListingDetailScreen} />
+    </MapStack.Navigator>
   )
 }
 
@@ -64,7 +74,7 @@ export default function BottomTabs() {
     >
       <Tab.Screen name="Home" component={FeedStackScreen} />
       <Tab.Screen name="Following" component={FollowingStackScreen} />
-      <Tab.Screen name="Map" component={MapScreen} />
+      <Tab.Screen name="Map" component={MapStackScreen} />
       <Tab.Screen name="Inbox" component={InboxScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
