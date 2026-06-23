@@ -1,13 +1,35 @@
 import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { createStackNavigator } from '@react-navigation/stack'
 import { Text } from 'react-native'
 import FeedScreen from '../screens/FeedScreen'
 import FollowingScreen from '../screens/FollowingScreen'
 import MapScreen from '../screens/MapScreen'
 import InboxScreen from '../screens/InboxScreen'
 import ProfileScreen from '../screens/ProfileScreen'
+import ListingDetailScreen from '../screens/ListingDetailScreen'
 
 const Tab = createBottomTabNavigator()
+const FeedStack = createStackNavigator()
+const FollowingStack = createStackNavigator()
+
+function FeedStackScreen() {
+  return (
+    <FeedStack.Navigator screenOptions={{ headerShown: false }}>
+      <FeedStack.Screen name="FeedMain" component={FeedScreen} />
+      <FeedStack.Screen name="ListingDetail" component={ListingDetailScreen} />
+    </FeedStack.Navigator>
+  )
+}
+
+function FollowingStackScreen() {
+  return (
+    <FollowingStack.Navigator screenOptions={{ headerShown: false }}>
+      <FollowingStack.Screen name="FollowingMain" component={FollowingScreen} />
+      <FollowingStack.Screen name="ListingDetail" component={ListingDetailScreen} />
+    </FollowingStack.Navigator>
+  )
+}
 
 const icon = (name, focused) => {
   const icons = {
@@ -38,11 +60,10 @@ export default function BottomTabs() {
           height: 56,
           paddingBottom: 6,
         },
-        tabBarBackground: () => null,
       })}
     >
-      <Tab.Screen name="Home" component={FeedScreen} />
-      <Tab.Screen name="Following" component={FollowingScreen} />
+      <Tab.Screen name="Home" component={FeedStackScreen} />
+      <Tab.Screen name="Following" component={FollowingStackScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
       <Tab.Screen name="Inbox" component={InboxScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
