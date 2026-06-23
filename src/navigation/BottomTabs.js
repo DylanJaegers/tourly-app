@@ -13,7 +13,16 @@ const Tab = createBottomTabNavigator()
 const FeedStack = createStackNavigator()
 const FollowingStack = createStackNavigator()
 const MapStack = createStackNavigator()
+const ProfileStack = createStackNavigator()
 
+function ProfileStackScreen() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="ListingDetail" component={ListingDetailScreen} />
+    </ProfileStack.Navigator>
+  )
+}
 function FeedStackScreen() {
   return (
     <FeedStack.Navigator screenOptions={{ headerShown: false }}>
@@ -76,7 +85,7 @@ export default function BottomTabs() {
       <Tab.Screen name="Following" component={FollowingStackScreen} />
       <Tab.Screen name="Map" component={MapStackScreen} />
       <Tab.Screen name="Inbox" component={InboxScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileStackScreen} />
     </Tab.Navigator>
   )
 }
