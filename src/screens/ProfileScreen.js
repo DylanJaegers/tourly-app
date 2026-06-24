@@ -1,3 +1,4 @@
+import { useFocusEffect } from '@react-navigation/native'
 import React, { useState, useEffect } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
@@ -18,9 +19,11 @@ export default function ProfileScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('saved')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
+  useFocusEffect(
+    React.useCallback(() => {
+      loadProfile()
+    }, [])
+  )
 
   async function loadProfile() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -53,7 +56,7 @@ export default function ProfileScreen({ navigation }) {
 
     const { data: follows } = await supabase
       .from('follows')
-      .select('agent_id, agent_profiles (full_name, brokerage, is_fsbo)')
+      .select('agent_id, users!follows_agent_id_fkey (full_name)')
       .eq('follower_id', user.id)
     setFollowedAgents(follows || [])
 
@@ -171,10 +174,8 @@ export default function ProfileScreen({ navigation }) {
               </View>
             ) : (
               followedAgents.map(follow => {
-                const agent = follow.agent_profiles
-                if (!agent) return null
-                const name = agent.full_name || 'Agent'
-                const brok = agent.is_fsbo ? 'For Sale By Owner' : (agent.brokerage || '')
+                const name = follow.users ? follow.users.full_name || 'Agent' : 'Agent'
+                const brok = ''
                 return (
                   <View key={follow.agent_id} style={styles.agentRow}>
                     <View style={styles.agentAvatar}>
@@ -184,7 +185,12 @@ export default function ProfileScreen({ navigation }) {
                       <Text style={styles.agentName}>{name}</Text>
                       <Text style={styles.agentBrok}>{brok}</Text>
                     </View>
-                    <TouchableOpacity style={styles.unfollowBtn}>
+                    <TouchableOpacity style={styles.unfollowBtn} onPress={async () => {
+                      await supabase.from('follows').delete()
+                        .eq('follower_id', user.id)
+                        .eq('agent_id', follow.agent_id)
+                      setFollowedAgents(prev => prev.filter(f => f.agent_id !== follow.agent_id))
+                    }}>
                       <Text style={styles.unfollowText}>Following</Text>
                     </TouchableOpacity>
                   </View>

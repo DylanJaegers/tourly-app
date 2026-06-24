@@ -1,3 +1,4 @@
+import { useFocusEffect } from '@react-navigation/native'
 import React, { useState, useEffect, useRef } from 'react'
 import {
   View, Text, StyleSheet, FlatList, Dimensions,
@@ -13,6 +14,7 @@ export default function FeedScreen({ navigation }) {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
   const [savedIds, setSavedIds] = useState(new Set())
+  const [followingIds, setFollowingIds] = useState(new Set())
   const [activeTab, setActiveTab] = useState('home')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showContact, setShowContact] = useState(false)
@@ -21,9 +23,14 @@ export default function FeedScreen({ navigation }) {
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 })
 
   useEffect(() => {
-    checkUser()
     loadFeed()
   }, [activeTab])
+
+  useFocusEffect(
+    React.useCallback(() => {
+      checkUser()
+    }, [])
+  )
 
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -32,6 +39,10 @@ export default function FeedScreen({ navigation }) {
       const { data: saves } = await supabase
         .from('saves').select('listing_id').eq('user_id', user.id)
       if (saves) setSavedIds(new Set(saves.map(s => s.listing_id)))
+
+      const { data: follows } = await supabase
+        .from('follows').select('agent_id').eq('follower_id', user.id)
+      if (follows) setFollowingIds(new Set(follows.map(f => f.agent_id)))
     }
   }
 
@@ -56,6 +67,21 @@ export default function FeedScreen({ navigation }) {
       setSavedIds(prev => new Set([...prev, listingId]))
     }
   }
+
+  async function toggleFollow(agentId) {
+  if (!user) return
+  if (agentId === user.id) return
+  console.log('toggleFollow called', agentId, 'user:', user.id)
+  if (followingIds.has(agentId)) {
+    const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('agent_id', agentId)
+    console.log('unfollow error:', error)
+    setFollowingIds(prev => { const next = new Set(prev); next.delete(agentId); return next })
+  } else {
+    const { data, error } = await supabase.from('follows').insert({ follower_id: user.id, agent_id: agentId }).select()
+    console.log('follow result:', data, 'error:', error)
+    setFollowingIds(prev => new Set([...prev, agentId]))
+  }
+}
 
   const getCover = (l) => l.cover_photo_url ||
     (l.listing_photos?.sort((a, b) => a.position - b.position)[0]?.url) || null
@@ -108,7 +134,9 @@ export default function FeedScreen({ navigation }) {
             listing={item}
             isActive={index === currentIndex}
             isSaved={savedIds.has(item.id)}
+            isFollowing={followingIds.has(item.agent_id)}
             onSave={() => toggleSave(item.id)}
+            onFollow={() => toggleFollow(item.agent_id)}
             onDetails={() => navigation.navigate('ListingDetail', { listing: item })}
             onContact={() => { setContactListing(item); setShowContact(true) }}
             getCover={getCover}
@@ -117,6 +145,7 @@ export default function FeedScreen({ navigation }) {
           />
         )}
       />
+
       <ContactSheet
         visible={showContact}
         onClose={() => setShowContact(false)}
@@ -127,17 +156,13 @@ export default function FeedScreen({ navigation }) {
   )
 }
 
-function FeedItem({ listing, isActive, isSaved, onSave, onDetails, onContact, getCover, getVid, fmt }) {  const vid = getVid(listing)
+function FeedItem({ listing, isActive, isSaved, isFollowing, onSave, onFollow, onDetails, onContact, getCover, getVid, fmt }) {
   const cover = getCover(listing)
   const aName = listing.agent_profiles?.full_name || 'Agent'
   const aBrok = listing.agent_profiles?.is_fsbo ? 'FSBO' : (listing.agent_profiles?.brokerage || '')
 
   return (
-    <TouchableOpacity
-      style={styles.item}
-      activeOpacity={1}
-      onPress={onDetails}
-    >
+    <TouchableOpacity style={styles.item} activeOpacity={1} onPress={onDetails}>
       {cover ? (
         <Image source={{ uri: cover }} style={styles.bg} resizeMode="cover" />
       ) : (
@@ -166,8 +191,13 @@ function FeedItem({ listing, isActive, isSaved, onSave, onDetails, onContact, ge
             </View>
             <Text style={styles.agentName}>{aName}</Text>
             <Text style={styles.agentBrok}>{aBrok}</Text>
-            <TouchableOpacity style={styles.followBtn}>
-              <Text style={styles.followBtnText}>Follow</Text>
+            <TouchableOpacity
+              style={[styles.followBtn, isFollowing && styles.followBtnActive]}
+              onPress={onFollow}
+            >
+              <Text style={[styles.followBtnText, isFollowing && styles.followBtnTextActive]}>
+                {isFollowing ? 'Following' : 'Follow'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -181,7 +211,7 @@ function FeedItem({ listing, isActive, isSaved, onSave, onDetails, onContact, ge
             <Text style={styles.actionIcon}>→</Text>
             <Text style={styles.actionLabel}>Details</Text>
           </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={onContact}>
+          <TouchableOpacity style={styles.actionBtn} onPress={onContact}>
             <Text style={styles.actionIcon}>✉</Text>
             <Text style={styles.actionLabel}>Contact</Text>
           </TouchableOpacity>
@@ -214,8 +244,7 @@ const styles = StyleSheet.create({
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   overlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0)',
-    background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   bottomInfo: {
     position: 'absolute', bottom: 80, left: 12, right: 12,
@@ -234,7 +263,9 @@ const styles = StyleSheet.create({
   agentName: { color: '#fff', fontSize: 12, fontWeight: '500' },
   agentBrok: { color: 'rgba(255,255,255,0.4)', fontSize: 11 },
   followBtn: { borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.4)', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+  followBtnActive: { backgroundColor: 'rgba(255,255,255,0.2)', borderColor: '#fff' },
   followBtnText: { color: '#fff', fontSize: 10 },
+  followBtnTextActive: { fontWeight: '700' },
   actions: { alignItems: 'center', gap: 16 },
   actionBtn: { alignItems: 'center', gap: 3 },
   actionIcon: { color: '#fff', fontSize: 22 },
