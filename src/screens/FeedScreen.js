@@ -4,6 +4,7 @@ import {
   TouchableOpacity, ActivityIndicator, Image
 } from 'react-native'
 import { supabase } from '../lib/supabase'
+import ContactSheet from '../components/ContactSheet'
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -14,6 +15,8 @@ export default function FeedScreen({ navigation }) {
   const [savedIds, setSavedIds] = useState(new Set())
   const [activeTab, setActiveTab] = useState('home')
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [showContact, setShowContact] = useState(false)
+  const [contactListing, setContactListing] = useState(null)
   const flatListRef = useRef(null)
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 })
 
@@ -107,18 +110,24 @@ export default function FeedScreen({ navigation }) {
             isSaved={savedIds.has(item.id)}
             onSave={() => toggleSave(item.id)}
             onDetails={() => navigation.navigate('ListingDetail', { listing: item })}
+            onContact={() => { setContactListing(item); setShowContact(true) }}
             getCover={getCover}
             getVid={getVid}
             fmt={fmt}
           />
         )}
       />
+      <ContactSheet
+        visible={showContact}
+        onClose={() => setShowContact(false)}
+        listing={contactListing}
+        user={user}
+      />
     </View>
   )
 }
 
-function FeedItem({ listing, isActive, isSaved, onSave, onDetails, getCover, getVid, fmt }) {
-  const vid = getVid(listing)
+function FeedItem({ listing, isActive, isSaved, onSave, onDetails, onContact, getCover, getVid, fmt }) {  const vid = getVid(listing)
   const cover = getCover(listing)
   const aName = listing.agent_profiles?.full_name || 'Agent'
   const aBrok = listing.agent_profiles?.is_fsbo ? 'FSBO' : (listing.agent_profiles?.brokerage || '')
@@ -172,7 +181,7 @@ function FeedItem({ listing, isActive, isSaved, onSave, onDetails, getCover, get
             <Text style={styles.actionIcon}>→</Text>
             <Text style={styles.actionLabel}>Details</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn} onPress={onContact}>
             <Text style={styles.actionIcon}>✉</Text>
             <Text style={styles.actionLabel}>Contact</Text>
           </TouchableOpacity>
