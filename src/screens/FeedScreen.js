@@ -1,5 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native'
 import React, { useState, useEffect, useRef } from 'react'
+import Svg, { Path, Polyline, Line } from 'react-native-svg'
 import {
   View, Text, StyleSheet, FlatList, Dimensions,
   TouchableOpacity, ActivityIndicator, Image
@@ -204,19 +205,39 @@ function FeedItem({ listing, isActive, isSaved, isFollowing, onSave, onFollow, o
 
         <View style={styles.actions}>
           <TouchableOpacity style={styles.actionBtn} onPress={onSave}>
-            <Text style={[styles.actionIcon, isSaved && { color: '#ff4d4d' }]}>♥</Text>
+            <View style={[styles.actionCircle, isSaved && styles.actionCircleSaved]}>
+              <Svg width="18" height="18" viewBox="0 0 24 24" fill={isSaved ? 'white' : 'none'} stroke="white" strokeWidth="2">
+                <Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </Svg>
+            </View>
             <Text style={styles.actionLabel}>Save</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={onDetails}>
-            <Text style={styles.actionIcon}>→</Text>
+            <View style={styles.actionCircle}>
+              <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <Path d="M5 12h14" />
+                <Path d="m12 5 7 7-7 7" />
+              </Svg>
+            </View>
             <Text style={styles.actionLabel}>Details</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={onContact}>
-            <Text style={styles.actionIcon}>✉</Text>
+            <View style={styles.actionCircle}>
+              <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <Path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <Polyline points="22,6 12,13 2,6" />
+              </Svg>
+            </View>
             <Text style={styles.actionLabel}>Contact</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionIcon}>⬆</Text>
+            <View style={styles.actionCircle}>
+              <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <Polyline points="16 6 12 2 8 6" />
+                <Line x1="12" y1="2" x2="12" y2="15" />
+              </Svg>
+            </View>
             <Text style={styles.actionLabel}>Share</Text>
           </TouchableOpacity>
         </View>
@@ -268,6 +289,13 @@ const styles = StyleSheet.create({
   followBtnTextActive: { fontWeight: '700' },
   actions: { alignItems: 'center', gap: 16 },
   actionBtn: { alignItems: 'center', gap: 3 },
-  actionIcon: { color: '#fff', fontSize: 22 },
+actionCircle: {
+  width: 44, height: 44, borderRadius: 22,
+  backgroundColor: 'rgba(0,0,0,0.4)',
+  borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.3)',
+  alignItems: 'center', justifyContent: 'center',
+},
+actionCircleSaved: { backgroundColor: '#ff4d4d', borderColor: '#ff4d4d' },
+actionLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '500' },
   actionLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 10 },
 })

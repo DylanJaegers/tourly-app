@@ -1,7 +1,7 @@
 import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator } from '@react-navigation/stack'
-import { Text } from 'react-native'
+import Svg, { Path, Circle, Polygon, Line, Polyline, Rect } from 'react-native-svg'
 import FeedScreen from '../screens/FeedScreen'
 import FollowingScreen from '../screens/FollowingScreen'
 import MapScreen from '../screens/MapScreen'
@@ -15,14 +15,6 @@ const FollowingStack = createStackNavigator()
 const MapStack = createStackNavigator()
 const ProfileStack = createStackNavigator()
 
-function ProfileStackScreen() {
-  return (
-    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
-      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
-      <ProfileStack.Screen name="ListingDetail" component={ListingDetailScreen} />
-    </ProfileStack.Navigator>
-  )
-}
 function FeedStackScreen() {
   return (
     <FeedStack.Navigator screenOptions={{ headerShown: false }}>
@@ -50,15 +42,52 @@ function MapStackScreen() {
   )
 }
 
-const icon = (name, focused) => {
-  const icons = {
-    Home: '▶',
-    Following: '👥',
-    Map: '🗺',
-    Inbox: '✉',
-    Profile: '👤',
-  }
-  return <Text style={{ fontSize: 18, color: focused ? '#ffffff' : '#555555' }}>{icons[name]}</Text>
+function ProfileStackScreen() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="ListingDetail" component={ListingDetailScreen} />
+    </ProfileStack.Navigator>
+  )
+}
+
+function TabIcon({ name, focused }) {
+  const color = focused ? '#ffffff' : '#888888'
+  const size = 22
+
+  if (name === 'Home') return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={focused ? color : 'none'} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <Polygon points="5,3 19,12 5,21" />
+    </Svg>
+  )
+  if (name === 'Following') return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <Circle cx="9" cy="7" r="4" />
+      <Path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <Path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </Svg>
+  )
+  if (name === 'Map') return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <Polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2" />
+      <Line x1="8" y1="2" x2="8" y2="18" />
+      <Line x1="16" y1="6" x2="16" y2="22" />
+    </Svg>
+  )
+  if (name === 'Inbox') return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+      <Polyline points="22,6 12,13 2,6" />
+    </Svg>
+  )
+  if (name === 'Profile') return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <Circle cx="12" cy="7" r="4" />
+    </Svg>
+  )
+  return null
 }
 
 export default function BottomTabs() {
@@ -66,12 +95,15 @@ export default function BottomTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarIcon: ({ focused }) => icon(route.name, focused),
-        tabBarLabel: ({ focused }) => (
-          <Text style={{ fontSize: 10, color: focused ? '#ffffff' : '#555555', marginBottom: 2 }}>
-            {route.name}
-          </Text>
-        ),
+        tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
+        tabBarLabel: ({ focused, children }) => {
+          const { Text } = require('react-native')
+          return (
+            <Text style={{ fontSize: 10, color: focused ? '#ffffff' : '#888888', marginBottom: 2 }}>
+              {children}
+            </Text>
+          )
+        },
         tabBarStyle: {
           backgroundColor: '#000000',
           borderTopColor: '#222222',

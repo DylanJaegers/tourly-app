@@ -24,6 +24,7 @@ export default function MapScreen({ navigation }) {
   })
   const mapRef = useRef(null)
   const listRef = useRef(null)
+  const [mapBounds, setMapBounds] = useState(null)
 
   useEffect(() => {
     loadListings()
@@ -130,7 +131,23 @@ export default function MapScreen({ navigation }) {
         ref={mapRef}
         style={styles.map}
         region={region}
-        onRegionChangeComplete={setRegion}
+        onRegionChangeComplete={(region) => {
+        setRegion(region)
+        const bounds = {
+          north: region.latitude + region.latitudeDelta / 2,
+          south: region.latitude - region.latitudeDelta / 2,
+          east: region.longitude + region.longitudeDelta / 2,
+          west: region.longitude - region.longitudeDelta / 2,
+        }
+        setMapBounds(bounds)
+        const inBounds = listings.filter(l => {
+          if (!l.lat || !l.lng) return false
+          const lat = parseFloat(l.lat)
+          const lng = parseFloat(l.lng)
+          return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east
+        })
+        setFilteredListings(inBounds)
+      }}
         showsUserLocation
       >
         {filteredListings.map(listing => (
